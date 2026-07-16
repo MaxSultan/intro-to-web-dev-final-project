@@ -20,16 +20,16 @@ I could also use the blog for code documentation, and recording a daily journal 
 
 ## Week 1 (April 6)
 
-- [ ] build contract between FE and BE
+- [X] build contract between FE and BE
 - create c# API - functional req
-- [ ] create backend API routes
-    - [ ] GET /articles
-    - [ ] GET /articles/:id
-    - [ ] POST /articles
-    - [ ] PUT /articles/:id
-    - [ ] DELETE /articles/:id
+- [X] create backend API routes
+    - [X] GET /articles
+    - [X] GET /articles/:id
+    - [X] POST /articles
+    - [X] PUT /articles/:id
+    - [X] DELETE /articles/:id
 
-- [ ] model articles data
+- [X] model articles data
 ```ts
 type articles = {
     title: string;
@@ -68,3 +68,10 @@ type articles = {
 - [ ] add button haver effects
 - [ ] add link hover effect
 - [ ] add table row hover effect
+
+
+# Run server
+
+cd ./api
+dotnet watch
+
