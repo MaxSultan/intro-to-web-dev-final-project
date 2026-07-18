@@ -44,14 +44,15 @@ type articles = {
 - [X] style basic elements (button, table, inputs)
 
 ## Week 2 (April 13)
-- [ ] add service layer (local storage, api routes) - functional req
+- [X] add service layer (local storage, api routes) - functional req
 - [ ] add domain layer
-- [ ] add shared layout (naviagtion links) - tecnical req and functional req
+- [X] add shared layout (naviagtion links) - tecnical req and functional req
 - [ ] create FE articles index page - table (technical req)
 - [ ] create add page for articles (multiple pages -> functional req)
 - [ ] create update page
 - [ ] create delete button on articles index
 - [ ] create basic view page for articles (just raw markdown)
+- [X] add dynamic routing through a hash router
 
 
 ## Week 3 (April 20)
