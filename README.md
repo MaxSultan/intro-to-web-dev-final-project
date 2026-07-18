@@ -40,8 +40,8 @@ type articles = {
 }
 ```
 
-- [ ] add design tokens for color, text, spacing, etc
-- [ ] style basic elements (button, table, inputs)
+- [X] add design tokens for color, text, spacing, etc
+- [X] style basic elements (button, table, inputs)
 
 ## Week 2 (April 13)
 - [ ] add service layer (local storage, api routes) - functional req
