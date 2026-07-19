@@ -14,6 +14,9 @@ export const getAllArticles = () => fetch(url, {
     throw new Error(res.status);
 })
 
+
+// We dont ever use this. on one hand it would be nice to ensure the most up to date data when updating, or viewing an article
+// on the other hand, in most cases we already have the data in the local state by fetching all articles.
 export const getArticle = (id) => fetch(`${url}${id}`, {
     method: "GET",
     headers: {

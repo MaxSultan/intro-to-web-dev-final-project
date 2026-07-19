@@ -45,7 +45,7 @@ type articles = {
 
 ## Week 2 (April 13)
 - [X] add service layer (local storage, api routes) - functional req
-- [ ] add domain layer
+- [X] add domain layer
 - [X] add shared layout (naviagtion links) - tecnical req and functional req
 - [ ] create FE articles index page - table (technical req)
 - [ ] create add page for articles (multiple pages -> functional req)
