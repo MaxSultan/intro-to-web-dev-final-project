@@ -1,5 +1,7 @@
+import { getArticlesState } from "./domain.js";
 import { getArticle } from "./service.js";
-const NOT_FOUND_ROUTE = { title: "404", render: () => "<h1>404 - Not Found</h1>" }
+
+const NOT_FOUND_ROUTE = { title: "404", render: async () => await "<h1>404 - Not Found</h1>" }
 const routes = {
     "/": { title: "home", render: renderHome },
     "#/": { title: "home", render: renderHome },
@@ -7,20 +9,27 @@ const routes = {
     "#/articles/new": { title: "Create Article", render: renderArticleCreate},
 }
 
-function renderHome(){
+async function renderHome(){
     const {headerElement, navElement} = setupSharedLayout();
     return `${headerElement.outerHTML} ${navElement.outerHTML}<h1>HOME</h1>`
 }
-function renderArticlesIndex(){
+
+async function renderArticlesIndex(){
     const {headerElement, navElement} = setupSharedLayout();
-    return `${headerElement.outerHTML} ${navElement.outerHTML}<h1>ARTICLES INDEX</h1>`
+    const articleSectionElement = await renderArticles();
+
+    console.log(articleSectionElement)
+    
+    return `${headerElement.outerHTML} ${navElement.outerHTML}<main><h1>ARTICLES INDEX</h1>${articleSectionElement.outerHTML}</main>`
+    
 };
-function renderArticleShow(){
+
+async function renderArticleShow(){
     const {headerElement, navElement} = setupSharedLayout();
     return `${headerElement.outerHTML} ${navElement.outerHTML}<h1>ARTICLE</h1>`
 };
 
-function renderArticleCreate(){
+async function renderArticleCreate(){
     const {headerElement, navElement} = setupSharedLayout();
     return `${headerElement.outerHTML} ${navElement.outerHTML}<h1>CREATE ARTICLE</h1>`
 }
@@ -33,16 +42,11 @@ const getDynamicPath = async (path) => {
 
   const id = dynamicArticleMatch[1];
   const article = await getArticle(id);
-  if (!article) {
-    return null;
-  }
-
-  return { title: article.title, render: () => renderArticleShow() };
+  return article ? { title: article.title, render: async () => await renderArticleShow() } : null;
 };
 
 const router = async () => {
   const path = window.location.hash || "#/";
-  console.log(path);
 
   const routePromise = routes[path]
     ? Promise.resolve(routes[path])
@@ -52,7 +56,7 @@ const router = async () => {
 
   const route = await routePromise;
   document.title = route.title;
-  document.getElementById("app").innerHTML = route.render();
+  document.getElementById("app").innerHTML = await route.render();
 };
 
 const navigateTo = (url) => {
@@ -60,16 +64,49 @@ const navigateTo = (url) => {
   router();
 };
 
-
-
 const setupArticles = () => {
     const sectionElement = document.createElement("section");
-
-    document.body.appendChild(sectionElement)
+    sectionElement.classList.add(
+        "articles-section"
+    )
+   return sectionElement;
 }
 
-const renderArticles = () => {
+const createArticleOverviewElement = (article) => {
+    const articleTableRowElement = document.createElement("tr");
+    articleTableRowElement.classList.add("article-overview");
+    delete article.body;
+    articleTableRowElement.replaceChildren(...Object.values(article).map(val => {
+        const tdElement = document.createElement("th");
+        tdElement.innerText = val;
+        return tdElement;
+    }));
 
+    return articleTableRowElement;
+}
+
+async function renderArticles(){
+    const articles = await getArticlesState();
+    const articleSectionElement = setupArticles();
+    const articlesTableElement = document.createElement("table");
+    articlesTableElement.classList.add("articles-table");
+
+    const tHeadElement = document.createElement("thead");
+    const headerRowElement = document.createElement("tr");
+    tHeadElement.replaceChildren(headerRowElement);
+
+    const headers = Object.keys(articles[0] || {});
+    headerRowElement.replaceChildren(...headers.filter(h => h !== "body").map((header) => {
+        const thElement = document.createElement("th");
+        thElement.innerText = header;
+        return thElement;
+    }))
+    const tBodyElement = document.createElement("tbody");
+    tBodyElement.replaceChildren(...articles.map(createArticleOverviewElement))
+    articlesTableElement.replaceChildren(tHeadElement, tBodyElement);
+
+    articleSectionElement.replaceChildren(articlesTableElement);
+    return articleSectionElement;
 }
 
 const setupNavigationLinks = (link) => {

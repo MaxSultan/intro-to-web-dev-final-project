@@ -4,7 +4,7 @@
     --surface: #ffffff;
     --surface-alt: #f1f5f9;
     --border: #e2e8f0;
-    --text: #e9e8f5;
+    --text: #1f1f25;
     --muted: #475569;
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
@@ -182,6 +182,9 @@
         background-color: var(--primary-dark);
         height: 100%;
         grid-area: navigation;
+    }
+    .articles-section {
+      padding:  16px;
     }
 }
 
