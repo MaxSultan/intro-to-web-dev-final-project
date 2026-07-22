@@ -47,11 +47,11 @@ type articles = {
 - [X] add service layer (local storage, api routes) - functional req
 - [X] add domain layer
 - [X] add shared layout (naviagtion links) - tecnical req and functional req
-- [ ] create FE articles index page - table (technical req)
+- [X] create FE articles index page - table (technical req)
 - [ ] create add page for articles (multiple pages -> functional req)
 - [ ] create update page
 - [ ] create delete button on articles index
-- [ ] create basic view page for articles (just raw markdown)
+- [X] create basic view page for articles (just raw markdown)
 - [X] add dynamic routing through a hash router
 
 

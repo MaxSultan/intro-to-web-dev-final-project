@@ -135,7 +135,7 @@
   }
 
   th,
-  td {
+  td > a {
     padding: 14px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border);
@@ -186,6 +186,29 @@
     .articles-section {
       padding:  16px;
     }
+
+    .tag {
+      color: var(--muted);
+      border: 2px solid currentColor;
+      text-transform: uppercase;
+      border-radius: 99999px;
+      width: min-content;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      display: inline;
+      margin: 0.25rem;
+    }
+
 }
 
-@layer foundations, components;
+@layer bespoke {
+  .article-content {
+    display: grid;
+    grid-auto-flow: row;
+    gap: 1rem;
+    align-content: start;
+    padding: 2rem;
+  }
+}
+
+@layer foundations, components, bespoke;
