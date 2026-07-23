@@ -48,9 +48,9 @@ type articles = {
 - [X] add domain layer
 - [X] add shared layout (naviagtion links) - tecnical req and functional req
 - [X] create FE articles index page - table (technical req)
-- [ ] create add page for articles (multiple pages -> functional req)
+- [X] create add page for articles (multiple pages -> functional req)
 - [ ] create update page
-- [ ] create delete button on articles index
+- [X] create delete button on articles index
 - [X] create basic view page for articles (just raw markdown)
 - [X] add dynamic routing through a hash router
 

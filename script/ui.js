@@ -1,8 +1,10 @@
 import {
+  createArticleState,
+  deleteArticleState,
   getArticlesState,
   validateTextLength,
 } from "./domain.js";
-import { createArticle, getArticle } from "./service.js";
+import { getArticle } from "./service.js";
 
 // #region router
 const notFoundElement = document.createElement("h2");
@@ -280,7 +282,7 @@ const buildArticlesForm = () => {
       return;
     }
 
-    await createArticle({
+    await createArticleState({
       title: titleInputElement.value.trim(),
       description: descriptionInputElement.value.trim(),
       author: authorInputElement.value.trim(),
@@ -335,15 +337,17 @@ async function renderArticleCreate() {
 const setupArticles = () => {
   const sectionElement = document.createElement("section");
   sectionElement.classList.add("articles-section");
+  sectionElement.setAttribute("id", "articles-section")
   return sectionElement;
 };
 
 const createArticleOverviewElement = (article) => {
   const articleTableRowElement = document.createElement("tr");
   articleTableRowElement.classList.add("article-overview");
-  delete article.body;
-  articleTableRowElement.replaceChildren(
-    ...Object.values(article).map((val) => {
+
+  const cells = Object.entries(article)
+    .filter(([key]) => key !== "body")
+    .map(([_, val]) => {
       const tdElement = document.createElement("td");
       const anchorElement = document.createElement("a");
       anchorElement.setAttribute(
@@ -354,8 +358,26 @@ const createArticleOverviewElement = (article) => {
       anchorElement.style.display = "block";
       tdElement.replaceChildren(anchorElement);
       return tdElement;
-    }),
-  );
+    });
+
+  const actionCellElement = document.createElement("td");
+  const deleteButtonElement = document.createElement("button");
+  deleteButtonElement.type = "button";
+  deleteButtonElement.classList.add("delete-button");
+  deleteButtonElement.innerText = "Delete";
+  deleteButtonElement.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    await deleteArticleState(article.id);
+
+    const articlesSectionElement = document.getElementById("articles-section");
+    const refreshedArticlesSection = await renderArticles();
+    articlesSectionElement.replaceChildren(...refreshedArticlesSection.childNodes);
+  });
+  actionCellElement.replaceChildren(deleteButtonElement);
+
+  articleTableRowElement.replaceChildren(...cells, actionCellElement);
 
   return articleTableRowElement;
 };
@@ -371,15 +393,18 @@ async function renderArticles() {
   tHeadElement.replaceChildren(headerRowElement);
 
   const headers = Object.keys(articles[0] || {});
-  headerRowElement.replaceChildren(
-    ...headers
-      .filter((h) => h !== "body")
-      .map((header) => {
-        const thElement = document.createElement("th");
-        thElement.innerText = header;
-        return thElement;
-      }),
-  );
+  const headerCells = headers
+    .filter((header) => header !== "body")
+    .map((header) => {
+      const thElement = document.createElement("th");
+      thElement.innerText = header;
+      return thElement;
+    });
+
+  const actionsHeaderElement = document.createElement("th");
+  actionsHeaderElement.innerText = "Actions";
+
+  headerRowElement.replaceChildren(...headerCells, actionsHeaderElement);
   const tBodyElement = document.createElement("tbody");
   tBodyElement.replaceChildren(...articles.map(createArticleOverviewElement));
   articlesTableElement.replaceChildren(tHeadElement, tBodyElement);
