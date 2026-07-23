@@ -49,18 +49,18 @@ type articles = {
 - [X] add shared layout (naviagtion links) - tecnical req and functional req
 - [X] create FE articles index page - table (technical req)
 - [X] create add page for articles (multiple pages -> functional req)
-- [ ] create update page
+- [X] create update page
 - [X] create delete button on articles index
 - [X] create basic view page for articles (just raw markdown)
 - [X] add dynamic routing through a hash router
 
 
 ## Week 3 (April 20)
-- [ ] add logo to shared layout - technical req (img)
+- [X] add logo to shared layout - technical req (img)
 - [ ] add searching and filtering form to articles index page (query string, form) - technical req
 - [ ] add markdown to HTML transposition
 - [ ] add drag and drop for tags to create and update page - (ul elements: tecnical req) functional req
-- [ ] create navigation
+- [X] create navigation
 
 
 ## Week 4 (April 27 - Last day of class and due date for final project)

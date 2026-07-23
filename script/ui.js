@@ -2,6 +2,7 @@ import {
   createArticleState,
   deleteArticleState,
   getArticlesState,
+  updateArticleState,
   validateTextLength,
 } from "./domain.js";
 import { getArticle } from "./service.js";
@@ -23,6 +24,18 @@ const routes = {
 };
 
 const getDynamicPath = async (path) => {
+  const updateArticleMatch = path.match(/^#\/articles\/(.+)\/update$/);
+  if (updateArticleMatch) {
+    const id = updateArticleMatch[1];
+    const article = await getArticle(id);
+    return article
+      ? {
+          title: `Update ${article.title}`,
+          render: async () => await renderArticleUpdate(article),
+        }
+      : null;
+  }
+
   const dynamicArticleMatch = path.match(/^#\/articles\/(.+)$/);
   if (!dynamicArticleMatch) {
     return null;
@@ -166,9 +179,10 @@ async function renderArticleShow(article) {
 // #endregion articlesShow
 
 // #region articlesCreate
-const buildArticlesForm = () => {
+const buildArticlesForm = (article) => {
   const formElement = document.createElement("form");
   formElement.classList.add("form");
+  const isEditing = Boolean(article?.id);
 
   const titleLabelElement = document.createElement("label");
   titleLabelElement.innerText = "Title";
@@ -180,6 +194,7 @@ const buildArticlesForm = () => {
   titleInputElement.classList.add("text-input");
   titleInputElement.setAttribute("id", "title");
   titleInputElement.setAttribute("name", "title");
+  titleInputElement.value = article?.title || "";
 
   const titleErrorMesageElement = document.createElement("p");
   titleErrorMesageElement.classList.add("error-msg");
@@ -194,6 +209,7 @@ const buildArticlesForm = () => {
   descriptionInputElement.classList.add("text-input");
   descriptionInputElement.setAttribute("id", "description");
   descriptionInputElement.setAttribute("name", "description");
+  descriptionInputElement.value = article?.description || "";
 
   const descriptionErrorMesageElement = document.createElement("p");
   descriptionErrorMesageElement.classList.add("error-msg");
@@ -208,6 +224,7 @@ const buildArticlesForm = () => {
   authorInputElement.classList.add("text-input");
   authorInputElement.setAttribute("id", "author");
   authorInputElement.setAttribute("name", "author");
+  authorInputElement.value = article?.author || "";
 
   const authorErrorMesageElement = document.createElement("p");
   authorErrorMesageElement.classList.add("error-msg");
@@ -222,6 +239,7 @@ const buildArticlesForm = () => {
   tagsInputElement.classList.add("text-input");
   tagsInputElement.setAttribute("id", "tags");
   tagsInputElement.setAttribute("name", "tags");
+  tagsInputElement.value = (article?.tags || []).join(", ");
 
   const tagsErrorMesageElement = document.createElement("p");
   tagsErrorMesageElement.classList.add("error-msg");
@@ -235,13 +253,14 @@ const buildArticlesForm = () => {
   bodyInputElement.classList.add("text-input");
   bodyInputElement.setAttribute("id", "body");
   bodyInputElement.setAttribute("name", "body");
+  bodyInputElement.value = article?.body || "";
 
   const bodyErrorMesageElement = document.createElement("p");
   bodyErrorMesageElement.classList.add("error-msg");
 
   const submitFormButtonELement = document.createElement("button");
   submitFormButtonELement.type = "submit";
-  submitFormButtonELement.innerText = "Submit";
+  submitFormButtonELement.innerText = isEditing ? "Save Changes" : "Submit";
   submitFormButtonELement.classList.add("primary-button");
 
   const clearFormButtonELement = document.createElement("button");
@@ -282,7 +301,7 @@ const buildArticlesForm = () => {
       return;
     }
 
-    await createArticleState({
+    const articlePayload = {
       title: titleInputElement.value.trim(),
       description: descriptionInputElement.value.trim(),
       author: authorInputElement.value.trim(),
@@ -291,7 +310,16 @@ const buildArticlesForm = () => {
         .map((tag) => tag.trim())
         .filter(Boolean),
       body: bodyInputElement.value.trim(),
-    });
+    };
+
+    if (isEditing) {
+      await updateArticleState({
+        ...articlePayload,
+        id: article.id,
+      });
+    } else {
+      await createArticleState(articlePayload);
+    }
 
     navigateTo("/intro-to-web-dev-final-project/#/articles");
   });
@@ -331,6 +359,19 @@ async function renderArticleCreate() {
   return [headerElement, navElement, mainElement];
 }
 
+async function renderArticleUpdate(article) {
+  const { headerElement, navElement } = setupSharedLayout();
+  const mainElement = document.createElement("main");
+
+  const titleElement = document.createElement("h2");
+  titleElement.innerText = "UPDATE ARTICLE";
+
+  const formElement = buildArticlesForm(article);
+  mainElement.replaceChildren(titleElement, formElement);
+
+  return [headerElement, navElement, mainElement];
+}
+
 // #endregion articlesCreate
 
 // #region articlesIndex
@@ -361,6 +402,16 @@ const createArticleOverviewElement = (article) => {
     });
 
   const actionCellElement = document.createElement("td");
+
+  const editLinkElement = document.createElement("a");
+  editLinkElement.classList.add("edit-link");
+  editLinkElement.setAttribute("data-link", "");
+  editLinkElement.setAttribute(
+    "href",
+    `/intro-to-web-dev-final-project/#/articles/${article.id}/update`,
+  );
+  editLinkElement.innerText = "Edit";
+
   const deleteButtonElement = document.createElement("button");
   deleteButtonElement.type = "button";
   deleteButtonElement.classList.add("delete-button");
@@ -375,7 +426,7 @@ const createArticleOverviewElement = (article) => {
     const refreshedArticlesSection = await renderArticles();
     articlesSectionElement.replaceChildren(...refreshedArticlesSection.childNodes);
   });
-  actionCellElement.replaceChildren(deleteButtonElement);
+  actionCellElement.replaceChildren(editLinkElement, deleteButtonElement);
 
   articleTableRowElement.replaceChildren(...cells, actionCellElement);
 
