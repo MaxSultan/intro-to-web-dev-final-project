@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Markdown blog logo">
+  <defs>
+    <linearGradient id="badgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Badge -->
+  <rect x="60" y="60" width="904" height="904" rx="220" ry="220" fill="url(#badgeGradient)" />
+
+  <!-- "M" glyph -->
+  <path
+    d="M 330 520 L 330 300 L 410 460 L 490 300 L 490 520"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="70"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Down chevron -->
+  <path
+    d="M 580 420 L 650 490 L 720 420"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="55"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Blog text lines -->
+  <rect x="330" y="600" width="480" height="40" rx="20" fill="#ffffff" />
+  <rect x="330" y="672" width="380" height="40" rx="20" fill="#ffffff" />
+  <rect x="330" y="744" width="280" height="40" rx="20" fill="#ffffff" />
+</svg>

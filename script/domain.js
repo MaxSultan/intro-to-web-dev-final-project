@@ -22,11 +22,6 @@ export const updateArticleState = (article) =>
     }
   });
 
-export const createArticleState = (article) =>
-  createArticle(article).then((res) => {
-    articles.push(res ?? article);
-  });
-
 export const deleteArticleState = (id) =>
   deleteArticle(id).then((json) => {
     if (json) {
@@ -38,3 +33,7 @@ export const deleteArticleState = (id) =>
   });
 
 // validate articles fields
+export const validateTextLength = (value) => {
+    if (value.length <= 0) return "Value is required";
+    return "";
+}
