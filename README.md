@@ -65,10 +65,10 @@ type articles = {
 
 ## Week 4 (April 27 - Last day of class and due date for final project)
 - [ ] save favorite articles in local storage to persist on refresh - technical req
-- [ ] add css transitions
-- [ ] add button haver effects
-- [ ] add link hover effect
-- [ ] add table row hover effect
+- [X] add css transitions
+- [X] add button hover effects
+- [X] add link hover effect
+- [X] add table row hover effect
 
 
 # Run server

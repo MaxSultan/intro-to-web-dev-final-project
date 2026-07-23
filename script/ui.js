@@ -402,6 +402,7 @@ const createArticleOverviewElement = (article) => {
     });
 
   const actionCellElement = document.createElement("td");
+  actionCellElement.classList.add("action-cell");
 
   const editLinkElement = document.createElement("a");
   editLinkElement.classList.add("edit-link");
