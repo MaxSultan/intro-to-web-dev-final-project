@@ -57,14 +57,14 @@ type articles = {
 
 ## Week 3 (April 20)
 - [X] add logo to shared layout - technical req (img)
-- [ ] add searching and filtering form to articles index page (query string, form) - technical req
+- [X] add searching and filtering form to articles index page (query string, form) - technical req
 - [ ] add markdown to HTML transposition
 - [ ] add drag and drop for tags to create and update page - (ul elements: tecnical req) functional req
 - [X] create navigation
 
 
 ## Week 4 (April 27 - Last day of class and due date for final project)
-- [ ] save favorite articles in local storage to persist on refresh - technical req
+- [X] save favorite articles in local storage to persist on refresh - technical req
 - [X] add css transitions
 - [X] add button hover effects
 - [X] add link hover effect

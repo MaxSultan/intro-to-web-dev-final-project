@@ -5,7 +5,12 @@ import {
   updateArticleState,
   validateTextLength,
 } from "./domain.js";
-import { getArticle } from "./service.js";
+import {
+  favoriteArticle,
+  getArticle,
+  getFavoritedArticles,
+  removeArticleFromFavorites,
+} from "./service.js";
 
 // #region router
 const notFoundElement = document.createElement("h2");
@@ -384,20 +389,24 @@ const setupArticles = () => {
 };
 
 const createArticleOverviewElement = (article) => {
+  const isFavorite = getFavoritedArticles().includes(article.id);
+
   const articleTableRowElement = document.createElement("tr");
   articleTableRowElement.classList.add("article-overview");
 
-  const cells = Object.entries(article)
+  const cells = [["", "favorite"], ...Object.entries(article)]
     .filter(([key]) => key !== "body")
     .map(([_, val]) => {
       const tdElement = document.createElement("td");
+      tdElement.classList.add("cell");
+
       const anchorElement = document.createElement("a");
       anchorElement.setAttribute(
         "href",
         `/intro-to-web-dev-final-project/#/articles/${article.id}`,
       );
-      anchorElement.innerText = val;
-      anchorElement.style.display = "block";
+      anchorElement.innerText =
+        val === "favorite" ? (isFavorite ? "✅" : "❌") : val;
       tdElement.replaceChildren(anchorElement);
       return tdElement;
     });
@@ -419,9 +428,6 @@ const createArticleOverviewElement = (article) => {
   deleteButtonElement.classList.add("delete-button");
   deleteButtonElement.innerText = "Delete";
   deleteButtonElement.addEventListener("click", async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
     await deleteArticleState(article.id);
 
     const articlesSectionElement = document.getElementById("articles-section");
@@ -430,7 +436,28 @@ const createArticleOverviewElement = (article) => {
       ...refreshedArticlesSection.childNodes,
     );
   });
-  actionCellElement.replaceChildren(editLinkElement, deleteButtonElement);
+
+  const favoriteButtonElement = document.createElement("button");
+  favoriteButtonElement.type = "button";
+  favoriteButtonElement.classList.add("favorite-button");
+  favoriteButtonElement.innerText = isFavorite ? "Unfavorite" : "Favorite";
+  favoriteButtonElement.addEventListener("click", async (event) => {
+    isFavorite
+      ? removeArticleFromFavorites(article.id)
+      : favoriteArticle(article.id);
+
+    const articlesSectionElement = document.getElementById("articles-section");
+    const refreshedArticlesSection = await renderArticles();
+    articlesSectionElement.replaceChildren(
+      ...refreshedArticlesSection.childNodes,
+    );
+  });
+
+  actionCellElement.replaceChildren(
+    editLinkElement,
+    deleteButtonElement,
+    favoriteButtonElement,
+  );
 
   articleTableRowElement.replaceChildren(...cells, actionCellElement);
 
@@ -448,7 +475,7 @@ const createSearchFormElement = () => {
   const formElement = document.createElement("form");
 
   const singleRowElement = document.createElement("div");
-  singleRowElement.classList.add("single-row")
+  singleRowElement.classList.add("single-row");
 
   const searchInputLabelElement = document.createElement("label");
   searchInputLabelElement.innerText = "Search:";
@@ -499,6 +526,14 @@ async function renderArticles() {
             a.title.toLowerCase().includes(query),
         );
 
+  const favoriteArticles = getFavoritedArticles();
+
+  const sortedArticles = filteredArticles.sort(
+    (a, b) =>
+      (favoriteArticles.includes(b.id) ? 1 : 0) -
+      (favoriteArticles.includes(a.id) ? 1 : 0),
+  );
+
   const articlesTableElement = document.createElement("table");
   articlesTableElement.classList.add("articles-table");
 
@@ -507,7 +542,7 @@ async function renderArticles() {
   tHeadElement.replaceChildren(headerRowElement);
 
   const headers = Object.keys(articles[0] || {});
-  const headerCells = headers
+  const headerCells = ["favorite", ...headers]
     .filter((header) => header !== "body")
     .map((header) => {
       const thElement = document.createElement("th");
@@ -521,7 +556,7 @@ async function renderArticles() {
   headerRowElement.replaceChildren(...headerCells, actionsHeaderElement);
   const tBodyElement = document.createElement("tbody");
   tBodyElement.replaceChildren(
-    ...filteredArticles.map(createArticleOverviewElement),
+    ...sortedArticles.map(createArticleOverviewElement),
   );
   articlesTableElement.replaceChildren(tHeadElement, tBodyElement);
 

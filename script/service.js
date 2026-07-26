@@ -71,10 +71,15 @@ export const deleteArticle = (id) => fetch(`${url}${id}`, {
     throw new Error(res.status);
 })
 
-export const getSavedArticles = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+export const getFavoritedArticles = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
 
-export const saveArticle = (id) => {
-    const existingSavedArticles = getSavedArticles();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existingSavedArticles, id]))
+export const favoriteArticle = (id) => {
+    const existingFavoritedArticles = getFavoritedArticles();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existingFavoritedArticles, id]))
+}
+
+export const removeArticleFromFavorites = (id) => {
+    const existingFavoritedArticles = getFavoritedArticles();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existingFavoritedArticles.filter(i => i !== id)]))
 }
