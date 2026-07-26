@@ -377,8 +377,9 @@ async function renderArticleUpdate(article) {
 // #region articlesIndex
 const setupArticles = () => {
   const sectionElement = document.createElement("section");
+
   sectionElement.classList.add("articles-section");
-  sectionElement.setAttribute("id", "articles-section")
+  sectionElement.setAttribute("id", "articles-section");
   return sectionElement;
 };
 
@@ -425,7 +426,9 @@ const createArticleOverviewElement = (article) => {
 
     const articlesSectionElement = document.getElementById("articles-section");
     const refreshedArticlesSection = await renderArticles();
-    articlesSectionElement.replaceChildren(...refreshedArticlesSection.childNodes);
+    articlesSectionElement.replaceChildren(
+      ...refreshedArticlesSection.childNodes,
+    );
   });
   actionCellElement.replaceChildren(editLinkElement, deleteButtonElement);
 
@@ -434,9 +437,68 @@ const createArticleOverviewElement = (article) => {
   return articleTableRowElement;
 };
 
+const useQueryString = (searchKey) => {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const filter = urlParams.get(searchKey)?.toLowerCase();
+  return filter;
+};
+
+const createSearchFormElement = () => {
+  const formElement = document.createElement("form");
+
+  const singleRowElement = document.createElement("div");
+  singleRowElement.classList.add("single-row")
+
+  const searchInputLabelElement = document.createElement("label");
+  searchInputLabelElement.innerText = "Search:";
+  searchInputLabelElement.setAttribute("for", "filter");
+
+  const searchInputElement = document.createElement("input");
+  searchInputElement.type = "text";
+  searchInputElement.classList.add("text-input");
+  searchInputElement.setAttribute("id", "filter");
+  searchInputElement.setAttribute("name", "filter");
+  searchInputElement.value = useQueryString("filter") ?? "";
+
+  const buttonElement = document.createElement("button");
+  buttonElement.type = "submit";
+  buttonElement.innerText = "Search";
+
+  singleRowElement.replaceChildren(
+    searchInputLabelElement,
+    searchInputElement,
+    buttonElement,
+  );
+
+  formElement.replaceChildren(singleRowElement);
+  return formElement;
+};
+
+const createNoResultsElement = () => {
+  const noResultsElement = document.createElement("p");
+  noResultsElement.innerText = "No results were found";
+  noResultsElement.classList.add("no-results-found");
+  return noResultsElement;
+};
+
 async function renderArticles() {
   const articles = await getArticlesState();
   const articleSectionElement = setupArticles();
+  const searchForm = createSearchFormElement();
+
+  const noResultsElement = createNoResultsElement();
+
+  const query = useQueryString("filter");
+  const filteredArticles =
+    query == null || !query
+      ? articles
+      : articles.filter(
+          (a) =>
+            a.description.toLowerCase().includes(query) ||
+            a.title.toLowerCase().includes(query),
+        );
+
   const articlesTableElement = document.createElement("table");
   articlesTableElement.classList.add("articles-table");
 
@@ -458,10 +520,15 @@ async function renderArticles() {
 
   headerRowElement.replaceChildren(...headerCells, actionsHeaderElement);
   const tBodyElement = document.createElement("tbody");
-  tBodyElement.replaceChildren(...articles.map(createArticleOverviewElement));
+  tBodyElement.replaceChildren(
+    ...filteredArticles.map(createArticleOverviewElement),
+  );
   articlesTableElement.replaceChildren(tHeadElement, tBodyElement);
 
-  articleSectionElement.replaceChildren(articlesTableElement);
+  articleSectionElement.replaceChildren(
+    searchForm,
+    filteredArticles.length > 0 ? articlesTableElement : noResultsElement,
+  );
   return articleSectionElement;
 }
 
