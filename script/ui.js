@@ -26,7 +26,21 @@ const routes = {
   "#/": { title: "home", render: renderHome },
   "#/articles": { title: "articles", render: renderArticlesIndex },
   "#/articles/new": { title: "Create Article", render: renderArticleCreate },
+  "#/articles/create": { title: "Create Article", render: renderArticleCreate },
 };
+
+const COMMON_TAGS = [
+  "html",
+  "css",
+  "javascript",
+  "web",
+  "frontend",
+  "backend",
+  "api",
+  "accessibility",
+  "performance",
+  "ux",
+];
 
 const getDynamicPath = async (path) => {
   const updateArticleMatch = path.match(/^#\/articles\/(.+)\/update$/);
@@ -244,7 +258,167 @@ const buildArticlesForm = (article) => {
   tagsInputElement.classList.add("text-input");
   tagsInputElement.setAttribute("id", "tags");
   tagsInputElement.setAttribute("name", "tags");
+  tagsInputElement.setAttribute("placeholder", "drag tags below or type comma-separated tags");
   tagsInputElement.value = (article?.tags || []).join(", ");
+
+  const tagsDndContainerElement = document.createElement("section");
+  tagsDndContainerElement.classList.add("tags-dnd");
+
+  const tagsBankContainerElement = document.createElement("div");
+  tagsBankContainerElement.classList.add("tags-bank");
+
+  const tagsBankTitleElement = document.createElement("h4");
+  tagsBankTitleElement.classList.add("tags-title");
+  tagsBankTitleElement.innerText = "Common tags bank";
+
+  const tagsBankListElement = document.createElement("div");
+  tagsBankListElement.classList.add("tags-list", "tags-list-bank");
+
+  const tagsDropContainerElement = document.createElement("div");
+  tagsDropContainerElement.classList.add("tags-drop");
+
+  const tagsDropTitleElement = document.createElement("h4");
+  tagsDropTitleElement.classList.add("tags-title");
+  tagsDropTitleElement.innerText = "Selected tags drop area";
+
+  const tagsDropHintElement = document.createElement("p");
+  tagsDropHintElement.classList.add("tags-hint");
+  tagsDropHintElement.innerText = "Drag tags here to add. Drag tags back to the bank to remove.";
+
+  const tagsDropZoneElement = document.createElement("div");
+  tagsDropZoneElement.classList.add("tags-list", "tags-list-drop");
+
+  const initialTagValues = tagsInputElement.value
+    .split(",")
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+  const selectedTags = new Set(initialTagValues);
+
+  const parseTagsInput = () => {
+    return tagsInputElement.value
+      .split(",")
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean);
+  };
+
+  const syncTagsInputValue = () => {
+    tagsInputElement.value = Array.from(selectedTags).join(", ");
+  };
+
+  const createTagChip = (tag, source) => {
+    const chipElement = document.createElement("button");
+    chipElement.type = "button";
+    chipElement.classList.add("tag-chip", source === "selected" ? "tag-chip-selected" : "tag-chip-bank");
+    chipElement.draggable = true;
+    chipElement.innerText = tag;
+
+    chipElement.addEventListener("dragstart", (event) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", tag);
+      event.dataTransfer.setData("tag-source", source);
+      chipElement.classList.add("is-dragging");
+    });
+
+    chipElement.addEventListener("dragend", () => {
+      chipElement.classList.remove("is-dragging");
+    });
+
+    chipElement.addEventListener("click", () => {
+      if (source === "bank") {
+        selectedTags.add(tag);
+      } else {
+        selectedTags.delete(tag);
+      }
+
+      syncTagsInputValue();
+      renderTagLists();
+    });
+
+    return chipElement;
+  };
+
+  const renderTagLists = () => {
+    tagsBankListElement.replaceChildren(
+      ...COMMON_TAGS.filter((tag) => !selectedTags.has(tag)).map((tag) =>
+        createTagChip(tag, "bank"),
+      ),
+    );
+
+    const selectedTagItems = Array.from(selectedTags);
+    if (selectedTagItems.length === 0) {
+      const emptyStateElement = document.createElement("p");
+      emptyStateElement.classList.add("tags-empty");
+      emptyStateElement.innerText = "Drop tags here";
+      tagsDropZoneElement.replaceChildren(emptyStateElement);
+      return;
+    }
+
+    tagsDropZoneElement.replaceChildren(
+      ...selectedTagItems.map((tag) => createTagChip(tag, "selected")),
+    );
+  };
+
+  const wireDropZone = (element, target) => {
+    element.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      element.classList.add("is-drag-over");
+    });
+
+    element.addEventListener("dragleave", () => {
+      element.classList.remove("is-drag-over");
+    });
+
+    element.addEventListener("drop", (event) => {
+      event.preventDefault();
+      element.classList.remove("is-drag-over");
+
+      const draggedTag = (event.dataTransfer.getData("text/plain") || "")
+        .trim()
+        .toLowerCase();
+      if (!draggedTag) {
+        return;
+      }
+
+      if (target === "selected") {
+        selectedTags.add(draggedTag);
+      } else {
+        selectedTags.delete(draggedTag);
+      }
+
+      syncTagsInputValue();
+      renderTagLists();
+    });
+  };
+
+  wireDropZone(tagsBankListElement, "bank");
+  wireDropZone(tagsDropZoneElement, "selected");
+
+  tagsInputElement.addEventListener("change", () => {
+    selectedTags.clear();
+    parseTagsInput().forEach((tag) => selectedTags.add(tag));
+    syncTagsInputValue();
+    renderTagLists();
+  });
+
+  formElement.addEventListener("reset", () => {
+    setTimeout(() => {
+      selectedTags.clear();
+      parseTagsInput().forEach((tag) => selectedTags.add(tag));
+      syncTagsInputValue();
+      renderTagLists();
+    }, 0);
+  });
+
+  renderTagLists();
+
+  tagsBankContainerElement.replaceChildren(tagsBankTitleElement, tagsBankListElement);
+  tagsDropContainerElement.replaceChildren(
+    tagsDropTitleElement,
+    tagsDropHintElement,
+    tagsDropZoneElement,
+  );
+  tagsDndContainerElement.replaceChildren(tagsBankContainerElement, tagsDropContainerElement);
 
   const tagsErrorMesageElement = document.createElement("p");
   tagsErrorMesageElement.classList.add("error-msg");
@@ -341,6 +515,7 @@ const buildArticlesForm = (article) => {
     authorErrorMesageElement,
     tagsLabelElement,
     tagsInputElement,
+    tagsDndContainerElement,
     tagsErrorMesageElement,
     bodyLabelElement,
     bodyInputElement,
