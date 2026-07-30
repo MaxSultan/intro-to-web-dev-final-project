@@ -95,13 +95,27 @@ const setupNavigationLinks = (link) => {
   const listItemElement = document.createElement("li");
 
   const linkElement = document.createElement("a");
-  linkElement.classList.add("naviagation-link");
+  linkElement.classList.add("navigation-link");
   linkElement.setAttribute("data-link", "");
   linkElement.innerText = link;
   linkElement.setAttribute(
     "href",
     `/intro-to-web-dev-final-project/#/${link === "home" ? "" : link}`,
   );
+
+  const currentHash = window.location.hash || "#/";
+  const isCreateRoute =
+    currentHash === "#/articles/new" || currentHash === "#/articles/create";
+  const isActive =
+    link === "home"
+      ? currentHash === "#/"
+      : link === "articles/new"
+        ? isCreateRoute
+        : currentHash.startsWith("#/articles") && !isCreateRoute;
+
+  if (isActive) {
+    linkElement.classList.add("is-active");
+  }
 
   listItemElement.replaceChildren(linkElement);
 
@@ -144,8 +158,10 @@ const setupSharedLayout = () => {
 async function renderHome() {
   const { headerElement, navElement } = setupSharedLayout();
   const mainElement = document.createElement("main");
+  mainElement.classList.add("main-content");
 
   const titleElement = document.createElement("h2");
+  titleElement.classList.add("page-title");
   titleElement.innerText = "HOME";
 
   mainElement.replaceChildren(titleElement);
@@ -162,6 +178,160 @@ const createTagsElement = (tag) => {
 
   return divElement;
 };
+
+const splitTableCells = (line) => {
+  const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return trimmed.split("|").map((cell) => cell.trim());
+};
+
+const isTableSeparator = (line) => {
+  const normalized = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  const columns = normalized.split("|").map((column) => column.trim());
+  return (
+    columns.length > 0 &&
+    columns.every((column) => /^:?-{3,}:?$/.test(column))
+  );
+};
+
+const createListItemElement = (itemText) => {
+  const checkboxMatch = itemText.match(/^\[( |x|X)\]\s+(.*)$/);
+  const listItemElement = document.createElement("li");
+
+  if (!checkboxMatch) {
+    listItemElement.innerText = itemText;
+    return listItemElement;
+  }
+
+  const checkboxElement = document.createElement("input");
+  checkboxElement.type = "checkbox";
+  checkboxElement.disabled = true;
+  checkboxElement.checked = checkboxMatch[1].toLowerCase() === "x";
+
+  const labelElement = document.createElement("span");
+  labelElement.innerText = checkboxMatch[2];
+
+  listItemElement.replaceChildren(checkboxElement, labelElement);
+  return listItemElement;
+};
+
+const markdownToElements = (markdownText) => {
+  const source = markdownText || "";
+  const lines = source.replace(/\r\n?/g, "\n").split("\n");
+  const elements = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const headingElement = document.createElement(`h${level}`);
+      headingElement.innerText = headingMatch[2].trim();
+      elements.push(headingElement);
+      index += 1;
+      continue;
+    }
+
+    if (
+      index + 1 < lines.length &&
+      trimmed.includes("|") &&
+      isTableSeparator(lines[index + 1])
+    ) {
+      const headerCells = splitTableCells(lines[index]);
+      const tableElement = document.createElement("table");
+      const theadElement = document.createElement("thead");
+      const headerRowElement = document.createElement("tr");
+      const tbodyElement = document.createElement("tbody");
+
+      headerRowElement.replaceChildren(
+        ...headerCells.map((cell) => {
+          const thElement = document.createElement("th");
+          thElement.innerText = cell;
+          return thElement;
+        }),
+      );
+      theadElement.replaceChildren(headerRowElement);
+
+      index += 2;
+
+      while (index < lines.length && lines[index].trim().includes("|")) {
+        const rowCells = splitTableCells(lines[index]);
+        const rowElement = document.createElement("tr");
+        rowElement.replaceChildren(
+          ...rowCells.map((cell) => {
+            const tdElement = document.createElement("td");
+            tdElement.innerText = cell;
+            return tdElement;
+          }),
+        );
+        tbodyElement.append(rowElement);
+        index += 1;
+      }
+
+      tableElement.replaceChildren(theadElement, tbodyElement);
+      elements.push(tableElement);
+      continue;
+    }
+
+    const unorderedMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+    if (unorderedMatch) {
+      const listElement = document.createElement("ul");
+
+      while (index < lines.length) {
+        const listLine = lines[index].trim();
+        const listItemMatch = listLine.match(/^[-*+]\s+(.*)$/);
+        if (!listItemMatch) {
+          break;
+        }
+
+        listElement.append(createListItemElement(listItemMatch[1].trim()));
+        index += 1;
+      }
+
+      elements.push(listElement);
+      continue;
+    }
+
+    const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+    if (orderedMatch) {
+      const listElement = document.createElement("ol");
+
+      while (index < lines.length) {
+        const listLine = lines[index].trim();
+        const listItemMatch = listLine.match(/^\d+\.\s+(.*)$/);
+        if (!listItemMatch) {
+          break;
+        }
+
+        listElement.append(createListItemElement(listItemMatch[1].trim()));
+        index += 1;
+      }
+
+      elements.push(listElement);
+      continue;
+    }
+
+    const paragraphLines = [];
+    while (index < lines.length && lines[index].trim()) {
+      paragraphLines.push(lines[index].trim());
+      index += 1;
+    }
+
+    const paragraphElement = document.createElement("p");
+    paragraphElement.innerText = paragraphLines.join(" ");
+    elements.push(paragraphElement);
+  }
+
+  return elements;
+};
+
 async function renderArticleShow(article) {
   const { headerElement, navElement } = setupSharedLayout();
 
@@ -180,15 +350,21 @@ async function renderArticleShow(article) {
   authorElement.classList.add("article-author");
   authorElement.innerText = `Author: ${article.author}`;
 
-  const articleBodyElement = document.createElement("p");
+  const articleBodyElement = document.createElement("section");
   articleBodyElement.classList.add("article-body");
-  articleBodyElement.innerText = article.body;
+  articleBodyElement.replaceChildren(...markdownToElements(article.body));
+
+  const tagsContainerElement = document.createElement("div");
+  tagsContainerElement.classList.add("article-tags");
+  tagsContainerElement.replaceChildren(
+    ...(article?.tags || []).map(createTagsElement),
+  );
 
   mainElement.replaceChildren(
     titleElement,
     subtitleElement,
     authorElement,
-    ...(article?.tags || []).map(createTagsElement),
+    tagsContainerElement,
     articleBodyElement,
   );
 
@@ -529,8 +705,10 @@ const buildArticlesForm = (article) => {
 async function renderArticleCreate() {
   const { headerElement, navElement } = setupSharedLayout();
   const mainElement = document.createElement("main");
+  mainElement.classList.add("main-content");
 
   const titleElement = document.createElement("h2");
+  titleElement.classList.add("page-title");
   titleElement.innerText = "CREATE ARTICLE";
 
   const formElement = buildArticlesForm();
@@ -542,8 +720,10 @@ async function renderArticleCreate() {
 async function renderArticleUpdate(article) {
   const { headerElement, navElement } = setupSharedLayout();
   const mainElement = document.createElement("main");
+  mainElement.classList.add("main-content");
 
   const titleElement = document.createElement("h2");
+  titleElement.classList.add("page-title");
   titleElement.innerText = "UPDATE ARTICLE";
 
   const formElement = buildArticlesForm(article);
@@ -648,6 +828,7 @@ const useQueryString = (searchKey) => {
 
 const createSearchFormElement = () => {
   const formElement = document.createElement("form");
+  formElement.classList.add("search-form");
 
   const singleRowElement = document.createElement("div");
   singleRowElement.classList.add("single-row");
@@ -665,6 +846,7 @@ const createSearchFormElement = () => {
 
   const buttonElement = document.createElement("button");
   buttonElement.type = "submit";
+  buttonElement.classList.add("primary-button");
   buttonElement.innerText = "Search";
 
   singleRowElement.replaceChildren(
@@ -747,7 +929,9 @@ async function renderArticlesIndex() {
   const articleSectionElement = await renderArticles();
 
   const mainElement = document.createElement("main");
+  mainElement.classList.add("main-content");
   const titleElement = document.createElement("h2");
+  titleElement.classList.add("page-title");
   titleElement.innerText = "ARTICLES INDEX";
 
   mainElement.replaceChildren(titleElement, articleSectionElement);

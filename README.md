@@ -58,8 +58,8 @@ type articles = {
 ## Week 3 (April 20)
 - [X] add logo to shared layout - technical req (img)
 - [X] add searching and filtering form to articles index page (query string, form) - technical req
-- [ ] add markdown to HTML transposition
-- [ ] add drag and drop for tags to create and update page - (ul elements: tecnical req) functional req
+- [X] add markdown to HTML transposition
+- [X] add drag and drop for tags to create and update page - (ul elements: tecnical req) functional req
 - [X] create navigation
 
 
